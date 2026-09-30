@@ -1,0 +1,161 @@
+services:
+
+  mongo-db:
+    image: mongo:4.2
+    hostname: mongo-db
+    container_name: mongo-db
+    ports:
+      - "27017:27017"
+    command: --nojournal
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - fiware-net
+
+  orion-ld:
+    image: quay.io/fiware/orion-ld
+    hostname: orion-ld
+    container_name: orion-ld
+    depends_on:
+      - mongo-db
+    ports:
+      - "1026:1026"
+    command: -dbhost mongo-db -logLevel DEBUG
+    networks:
+      - fiware-net
+
+  driver-downloader:
+    image: alpine:latest
+    container_name: driver-downloader
+    command: >
+      sh -c "if [ ! -f /drivers/postgresql.jar ]; then
+      echo 'Baixando driver PostgreSQL JDBC...';
+      wget -O /drivers/postgresql.jar https://jdbc.postgresql.org/download/postgresql-42.7.2.jar;
+      else
+      echo 'Driver já existente. Pulando download.';
+      fi"
+    volumes:
+      - draco-drivers:/drivers
+    networks:
+      - fiware-net
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: draco_user
+      POSTGRES_PASSWORD: draco_password
+      POSTGRES_DB: fiware_data
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - fiware-net
+
+  draco:
+    image: fiware/draco:latest
+    container_name: fiware-draco
+    environment:
+      - NIFI_WEB_HTTP_PORT=9090
+    ports:
+      - "9090:9090"
+      - "5050:5050"
+    volumes:
+      - draco-drivers:/opt/nifi/nifi-current/drivers
+    depends_on:
+      driver-downloader:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_started
+    networks:
+      - fiware-net
+
+  cratedb:
+    image: crate:5.5
+    container_name: cratedb
+    ports:
+      - "4200:4200"
+      - "5433:5432"
+    command:
+      - crate
+      - -Cauth.host_based.enabled=false
+      - -Ccluster.name=fiware-crate
+    volumes:
+      - cratedata:/data
+    networks:
+      - fiware-net
+
+  quantumleap:
+    image: orchestracities/quantumleap:latest
+    container_name: fiware-quantumleap
+    ports:
+      - "8668:8668"
+    environment:
+      - CRATE_HOST=cratedb
+      - CRATE_PORT=4200
+      - LOG_LEVEL=INFO
+    depends_on:
+      - cratedb
+    networks:
+      - fiware-net
+
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: mosquitto
+    ports:
+      - "1883:1883"
+    command: mosquitto -c /mosquitto-no-auth.conf
+    networks:
+      - fiware-net
+
+  mongo-iota:
+    image: mongo:6.0
+    container_name: mongo-iota
+    volumes:
+      - mongo-iota-data:/data/db
+    networks:
+      - fiware-net
+
+  iot-agent:
+    image: telefonicaiot/iotagent-json:latest
+    container_name: fiware-iot-agent
+    ports:
+      - "4041:4041"
+    environment:
+    - IOTA_CB_HOST=orion-ld
+    - IOTA_CB_PORT=1026
+    - IOTA_CB_NGSI_VERSION=ld
+
+    - IOTA_NORTH_PORT=4041
+    - IOTA_REGISTRY_TYPE=mongodb
+    - IOTA_MONGO_URI=mongodb://mongo-iota:27017/iotagentjson
+
+    - IOTA_MQTT_HOST=mosquitto
+    - IOTA_MQTT_PORT=1883
+
+    - IOTA_PROVIDER_URL=http://fiware-iot-agent:4041
+    - IOTA_JSON_LD_CONTEXT=https://raw.githubusercontent.com/smart-data-models/dataModel.Device/master/context.jsonld
+
+    - IOTA_AUTOCACHE=true
+    - IOTA_DEFAULT_EXPRESSION_LANGUAGE=jexl
+
+    depends_on:
+      - mosquitto
+      - mongo-iota
+
+    networks:
+      - fiware-net
+
+volumes:
+  mongo-data:
+  pgdata:
+  draco-drivers:
+  cratedata:
+  mongo-iota-data:
+
+networks:
+  fiware-net:
+    driver: bridge
+
+
