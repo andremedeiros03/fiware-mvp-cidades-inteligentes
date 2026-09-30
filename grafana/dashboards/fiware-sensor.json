@@ -47,7 +47,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT CASE WHEN recvtimets ~ '^[0-9]+(\\.[0-9]+)?$' THEN to_timestamp(recvtimets::double precision / 1000.0) ELSE recvtimets::timestamptz END AS \"time\", attrvalue::double precision AS value FROM treinamento_fiware.x002f WHERE attrname = 'temperature' AND $__timeFilter(CASE WHEN recvtimets ~ '^[0-9]+(\\.[0-9]+)?$' THEN to_timestamp(recvtimets::double precision / 1000.0) ELSE recvtimets::timestamptz END) ORDER BY 1",
+          "rawSql": "WITH dados AS (SELECT CASE WHEN recvtimets ~ '^[0-9]+(\\.[0-9]+)?$' THEN to_timestamp(recvtimets::double precision / 1000.0) ELSE recvtimets::timestamptz END AS ts, attrname, attrvalue::double precision AS value FROM treinamento_fiware.x002f) SELECT ts AS \"time\", value FROM dados WHERE attrname = 'temperature' AND $__timeFilter(ts) ORDER BY ts",
           "refId": "A"
         }
       ],
@@ -93,7 +93,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT CASE WHEN recvtimets ~ '^[0-9]+(\\.[0-9]+)?$' THEN to_timestamp(recvtimets::double precision / 1000.0) ELSE recvtimets::timestamptz END AS \"time\", attrvalue::double precision AS value FROM treinamento_fiware.x002f WHERE attrname = 'humidity' AND $__timeFilter(CASE WHEN recvtimets ~ '^[0-9]+(\\.[0-9]+)?$' THEN to_timestamp(recvtimets::double precision / 1000.0) ELSE recvtimets::timestamptz END) ORDER BY 1",
+          "rawSql": "WITH dados AS (SELECT CASE WHEN recvtimets ~ '^[0-9]+(\\.[0-9]+)?$' THEN to_timestamp(recvtimets::double precision / 1000.0) ELSE recvtimets::timestamptz END AS ts, attrname, attrvalue::double precision AS value FROM treinamento_fiware.x002f) SELECT ts AS \"time\", value FROM dados WHERE attrname = 'humidity' AND $__timeFilter(ts) ORDER BY ts",
           "refId": "A"
         }
       ],
@@ -118,6 +118,6 @@
   "timezone": "browser",
   "title": "FIWARE - Sensor de Temperatura e Umidade",
   "uid": "fiware-sensor",
-  "version": 3,
+  "version": 4,
   "weekStart": ""
 }
