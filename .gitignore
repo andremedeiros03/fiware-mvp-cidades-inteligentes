@@ -1,0 +1,22 @@
+.env
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Dados persistentes locais
+postgres-data/
+pgdata/
+crate-data/
+cratedata/
+mongo-data/
+mongo-iota-data/
+nifi-data/
+drivers/
+
+# Arquivos temporários e backups
+*.bak
+*.swp
+*~
