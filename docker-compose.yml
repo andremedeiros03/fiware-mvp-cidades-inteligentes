@@ -43,9 +43,9 @@ services:
     image: postgres:15-alpine
     container_name: postgres-db
     environment:
-      POSTGRES_USER: draco_user
-      POSTGRES_PASSWORD: draco_password
-      POSTGRES_DB: fiware_data
+      POSTGRES_USER: ${POSTGRES_USER:-draco_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-draco_password}
+      POSTGRES_DB: ${POSTGRES_DB:-fiware_data}
     ports:
       - "5432:5432"
     volumes:
@@ -123,27 +123,45 @@ services:
     ports:
       - "4041:4041"
     environment:
-    - IOTA_CB_HOST=orion-ld
-    - IOTA_CB_PORT=1026
-    - IOTA_CB_NGSI_VERSION=ld
-
-    - IOTA_NORTH_PORT=4041
-    - IOTA_REGISTRY_TYPE=mongodb
-    - IOTA_MONGO_URI=mongodb://mongo-iota:27017/iotagentjson
-
-    - IOTA_MQTT_HOST=mosquitto
-    - IOTA_MQTT_PORT=1883
-
-    - IOTA_PROVIDER_URL=http://fiware-iot-agent:4041
-    - IOTA_JSON_LD_CONTEXT=https://raw.githubusercontent.com/smart-data-models/dataModel.Device/master/context.jsonld
-
-    - IOTA_AUTOCACHE=true
-    - IOTA_DEFAULT_EXPRESSION_LANGUAGE=jexl
-
+      - IOTA_CB_HOST=orion-ld
+      - IOTA_CB_PORT=1026
+      - IOTA_CB_NGSI_VERSION=ld
+      - IOTA_NORTH_PORT=4041
+      - IOTA_REGISTRY_TYPE=mongodb
+      - IOTA_MONGO_URI=mongodb://mongo-iota:27017/iotagentjson
+      - IOTA_MQTT_HOST=mosquitto
+      - IOTA_MQTT_PORT=1883
+      - IOTA_PROVIDER_URL=http://fiware-iot-agent:4041
+      - IOTA_JSON_LD_CONTEXT=https://raw.githubusercontent.com/smart-data-models/dataModel.Device/master/context.jsonld
+      - IOTA_AUTOCACHE=true
+      - IOTA_DEFAULT_EXPRESSION_LANGUAGE=jexl
     depends_on:
       - mosquitto
       - mongo-iota
+    networks:
+      - fiware-net
 
+  grafana:
+    image: grafana/grafana:13.2.2
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      FIWARE_PG_HOST: postgres
+      FIWARE_PG_PORT: "5432"
+      FIWARE_PG_DATABASE: ${POSTGRES_DB:-fiware_data}
+      FIWARE_PG_USER: ${POSTGRES_USER:-draco_user}
+      FIWARE_PG_PASSWORD: ${POSTGRES_PASSWORD:-draco_password}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/etc/grafana/dashboards:ro
+    depends_on:
+      postgres:
+        condition: service_started
     networks:
       - fiware-net
 
@@ -153,9 +171,8 @@ volumes:
   draco-drivers:
   cratedata:
   mongo-iota-data:
+  grafana-data:
 
 networks:
   fiware-net:
     driver: bridge
-
-
