@@ -1,10 +1,23 @@
-# MVP FIWARE para Cidades Inteligentes
+# Protótipo de Infraestrutura FIWARE para Cidades Inteligentes
 
-Projeto acadêmico desenvolvido para demonstrar a implantação e integração de Generic Enablers FIWARE em um cenário de Internet das Coisas e Cidades Inteligentes.
+Este repositório contém um **protótipo técnico e reutilizável** de infraestrutura FIWARE desenvolvido para apoiar a construção de um MVP no contexto de Internet das Coisas e Cidades Inteligentes.
 
-A solução implementa o fluxo completo de aquisição, gerenciamento, persistência e visualização de dados de contexto usando MQTT, IoT Agent, Orion-LD, QuantumLeap, Draco, CrateDB, PostgreSQL e Grafana.
+A ideia central do projeto ainda será definida. O cenário atual de **sensor de temperatura e umidade** foi usado apenas para validar o funcionamento da arquitetura completa, desde a publicação via MQTT até a persistência e visualização dos dados.
 
-## Arquitetura
+A infraestrutura já validada poderá ser reaproveitada quando o problema real do projeto for escolhido. Nesse momento, será necessário principalmente adaptar as entidades NGSI-LD, o Data Model, os atributos dos dispositivos, os tópicos MQTT, as subscriptions e o dashboard.
+
+## Objetivo deste protótipo
+
+Validar uma arquitetura FIWARE capaz de:
+
+- receber dados de dispositivos via MQTT;
+- integrar dispositivos com o FIWARE por meio do IoT Agent;
+- gerenciar contexto com o Orion-LD;
+- armazenar histórico com QuantumLeap e CrateDB;
+- persistir notificações com Draco e PostgreSQL;
+- visualizar dados em dashboards com Grafana.
+
+## Arquitetura validada
 
 ```text
 Sensor / Cliente MQTT
@@ -75,22 +88,32 @@ Confira os containers:
 docker compose ps
 ```
 
-## Entidade utilizada nos testes
+## Cenário atual de validação
+
+O cenário usado até aqui é apenas um exemplo técnico para comprovar o funcionamento da infraestrutura.
+
+Entidade utilizada:
 
 ```text
 urn:ngsi-ld:Device:sensor-temperatura-001
 ```
 
-Tipo: `Device`
+Tipo:
+
+```text
+Device
+```
 
 Atributos principais:
 
 - `temperature`
 - `humidity`
 
+Quando a ideia central do projeto for definida, essa entidade e seus atributos serão substituídos ou adaptados para o domínio escolhido.
+
 ## MQTT
 
-Tópico utilizado:
+Tópico utilizado no cenário de teste:
 
 ```text
 /json/minha-chave-secreta-456/sensor-temperatura-001/attrs
@@ -169,7 +192,7 @@ docker exec -it postgres-db psql -U draco_user -d fiware_data -c 'SELECT * FROM 
 
 ## QuantumLeap + CrateDB
 
-Exemplo de consulta temporal:
+Exemplo de consulta temporal utilizada na validação:
 
 ```http
 GET http://localhost:8668/v2/entities/urn:ngsi-ld:Device:sensor-temperatura-001/attrs/temperature?type=Device&lastN=5
@@ -187,16 +210,9 @@ Acesse:
 http://localhost:3000
 ```
 
-Credenciais padrão do ambiente de laboratório:
-
-```text
-usuário: admin
-senha: admin
-```
-
 O datasource `FIWARE PostgreSQL` é configurado automaticamente apontando para o PostgreSQL utilizado pelo Draco.
 
-O dashboard provisionado é:
+O dashboard de validação é:
 
 ```text
 FIWARE - Sensor de Temperatura e Umidade
@@ -213,7 +229,7 @@ Os painéis consultam diretamente:
 treinamento_fiware.x002f
 ```
 
-O dashboard utiliza `recvtimets` como eixo temporal e `attrvalue` como valor da medição.
+A visualização no Grafana foi validada com sucesso. Quando o domínio definitivo do projeto for escolhido, o dashboard será adaptado aos indicadores relevantes para a solução.
 
 Arquivos de provisionamento:
 
@@ -223,11 +239,61 @@ grafana/provisioning/dashboards/dashboards.yml
 grafana/dashboards/fiware-sensor.json
 ```
 
-## Observação sobre o tipo de `temperature`
+## Observações técnicas encontradas durante a validação
 
-Durante os testes, a coluna `temperature` foi inicialmente criada como `BIGINT` no CrateDB. Como consequência, valores decimais posteriores foram armazenados sem as casas decimais.
+Durante a configuração e os testes foram identificados alguns pontos importantes:
 
-A integração permanece funcional, mas esse comportamento deve ser considerado caso o projeto exija precisão decimal no histórico temporal.
+- o processor `NGSIToPostgreSQL` do Draco funcionou de forma estável com notificações no formato NGSI-v2 normalizado;
+- o modelo `db-by-entity` gerou nomes de tabela grandes demais para o limite de identificadores do PostgreSQL, por isso foi utilizado `db-by-service-path`;
+- no CrateDB, a coluna `temperature` foi inicialmente inferida como `BIGINT`, o que removeu casas decimais de valores posteriores;
+- no PostgreSQL do Draco, o campo `recvtimets` foi persistido como texto e pode conter timestamp em formato ISO, exigindo tratamento na consulta do Grafana.
+
+Esses pontos fazem parte da validação técnica do protótipo e serão considerados na evolução do MVP.
+
+## O que será reutilizado no projeto final
+
+A maior parte desta infraestrutura poderá ser mantida:
+
+- `docker-compose.yml`;
+- Orion-LD;
+- MongoDB;
+- Mosquitto;
+- IoT Agent;
+- Draco;
+- PostgreSQL;
+- QuantumLeap;
+- CrateDB;
+- Grafana;
+- rede Docker;
+- fluxo geral de aquisição, gerenciamento, persistência e visualização.
+
+## O que deverá ser adaptado
+
+Após a definição da ideia central do projeto, deverão ser ajustados:
+
+- problema de Cidades Inteligentes a ser resolvido;
+- beneficiários da solução;
+- entidades e tipos NGSI-LD;
+- Data Model utilizado;
+- atributos e sensores;
+- tópicos MQTT;
+- service groups e devices do IoT Agent;
+- subscriptions do Orion-LD;
+- consultas e painéis do Grafana;
+- documentação e relatório final.
+
+## Próxima etapa
+
+A próxima etapa do projeto é definir a **ideia central do MVP**, incluindo:
+
+1. problema dentro do contexto de Cidades Inteligentes;
+2. público beneficiado;
+3. dados de contexto necessários;
+4. Data Model adequado;
+5. sensores ou fontes de dados;
+6. indicadores que serão exibidos no dashboard.
+
+Depois disso, a infraestrutura deste repositório será adaptada para representar a solução definitiva.
 
 ## Estrutura do repositório
 
@@ -248,13 +314,17 @@ A integração permanece funcional, mas esse comportamento deve ser considerado 
     └── relatorio.md
 ```
 
-## Status da integração
+## Status atual
 
 - MQTT -> IoT Agent: funcionando
 - IoT Agent -> Orion-LD: funcionando
 - Orion-LD -> QuantumLeap -> CrateDB: funcionando
 - Orion-LD -> Draco -> PostgreSQL: funcionando
-- PostgreSQL -> Grafana: configurado
+- PostgreSQL -> Grafana: funcionando
+- Dashboard de validação: funcionando
+- Ideia central do MVP: pendente de definição
+- Data Model definitivo: pendente de definição
+- Dashboard definitivo: pendente de adaptação
 
 ## Autor
 
