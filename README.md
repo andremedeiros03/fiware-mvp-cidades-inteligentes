@@ -2,7 +2,7 @@
 
 Projeto acadêmico desenvolvido para demonstrar a implantação e integração de Generic Enablers FIWARE em um cenário de Internet das Coisas e Cidades Inteligentes.
 
-A solução implementa o fluxo completo de aquisição, gerenciamento e persistência de dados de contexto usando MQTT, IoT Agent, Orion-LD, QuantumLeap, Draco, CrateDB e PostgreSQL.
+A solução implementa o fluxo completo de aquisição, gerenciamento, persistência e visualização de dados de contexto usando MQTT, IoT Agent, Orion-LD, QuantumLeap, Draco, CrateDB, PostgreSQL e Grafana.
 
 ## Arquitetura
 
@@ -23,6 +23,9 @@ Sensor / Cliente MQTT
      |          |
      v          v
   CrateDB   PostgreSQL
+                |
+                v
+              Grafana
 ```
 
 ## Componentes utilizados
@@ -37,6 +40,7 @@ Sensor / Cliente MQTT
 | CrateDB | Banco temporal utilizado pelo QuantumLeap | 4200 / 5433 |
 | Draco | Persistência de notificações do Orion | 9090 / 5050 |
 | PostgreSQL | Persistência utilizada pelo Draco | 5432 |
+| Grafana | Dashboard de visualização | 3000 |
 
 ## Pré-requisitos
 
@@ -73,17 +77,11 @@ docker compose ps
 
 ## Entidade utilizada nos testes
 
-A entidade principal utilizada durante a integração foi:
-
 ```text
 urn:ngsi-ld:Device:sensor-temperatura-001
 ```
 
-Tipo:
-
-```text
-Device
-```
+Tipo: `Device`
 
 Atributos principais:
 
@@ -104,7 +102,7 @@ Exemplo de publicação:
 docker exec -it mosquitto mosquitto_pub -h localhost -t '/json/minha-chave-secreta-456/sensor-temperatura-001/attrs' -m '{"t":34.2,"h":49.8}'
 ```
 
-O IoT Agent converte os aliases:
+Aliases utilizados pelo IoT Agent:
 
 ```text
 t -> temperature
@@ -113,7 +111,7 @@ h -> humidity
 
 ## Draco + PostgreSQL
 
-O fluxo configurado no Apache NiFi do Draco é:
+Fluxo configurado no Apache NiFi do Draco:
 
 ```text
 ListenHTTP -> NGSIToPostgreSQL -> LogAttribute
@@ -135,19 +133,13 @@ Configuração utilizada no `NGSIToPostgreSQL`:
 | Batch Size | 1 durante os testes |
 | Rollback On Failure | false |
 
-O pool JDBC utiliza:
+Pool JDBC:
 
 ```text
 jdbc:postgresql://postgres-db:5432/fiware_data
 ```
 
-Usuário:
-
-```text
-draco_user
-```
-
-O driver PostgreSQL é disponibilizado ao Draco no diretório:
+Driver PostgreSQL no Draco:
 
 ```text
 /opt/nifi/nifi-current/drivers/postgresql.jar
@@ -155,35 +147,27 @@ O driver PostgreSQL é disponibilizado ao Draco no diretório:
 
 ### Validação no PostgreSQL
 
-Listar schemas:
-
 ```bash
 docker exec -it postgres-db psql -U draco_user -d fiware_data -c '\dn'
 ```
-
-Listar tabelas do tenant:
 
 ```bash
 docker exec -it postgres-db psql -U draco_user -d fiware_data -c '\dt treinamento_fiware.*'
 ```
 
-Durante os testes foi criada a tabela:
+Tabela criada durante os testes:
 
 ```text
 treinamento_fiware.x002f
 ```
 
-Consultar os registros:
+Consulta dos registros:
 
 ```bash
 docker exec -it postgres-db psql -U draco_user -d fiware_data -c 'SELECT * FROM treinamento_fiware.x002f;'
 ```
 
-Foram persistidos registros de `temperature` e `humidity` associados à entidade `urn:ngsi-ld:Device:sensor-temperatura-001`.
-
 ## QuantumLeap + CrateDB
-
-O QuantumLeap recebe notificações do Orion-LD e armazena o histórico no CrateDB.
 
 Exemplo de consulta temporal:
 
@@ -192,6 +176,52 @@ GET http://localhost:8668/v2/entities/urn:ngsi-ld:Device:sensor-temperatura-001/
 ```
 
 Foi validado o armazenamento de múltiplas medições históricas da entidade.
+
+## Grafana
+
+O Grafana é provisionado automaticamente pelo Docker Compose.
+
+Acesse:
+
+```text
+http://localhost:3000
+```
+
+Credenciais padrão do ambiente de laboratório:
+
+```text
+usuário: admin
+senha: admin
+```
+
+O datasource `FIWARE PostgreSQL` é configurado automaticamente apontando para o PostgreSQL utilizado pelo Draco.
+
+O dashboard provisionado é:
+
+```text
+FIWARE - Sensor de Temperatura e Umidade
+```
+
+Ele contém dois painéis de série temporal:
+
+- Temperatura
+- Umidade
+
+Os painéis consultam diretamente:
+
+```text
+treinamento_fiware.x002f
+```
+
+O dashboard utiliza `recvtimets` como eixo temporal e `attrvalue` como valor da medição.
+
+Arquivos de provisionamento:
+
+```text
+grafana/provisioning/datasources/postgres.yml
+grafana/provisioning/dashboards/dashboards.yml
+grafana/dashboards/fiware-sensor.json
+```
 
 ## Observação sobre o tipo de `temperature`
 
@@ -206,16 +236,25 @@ A integração permanece funcional, mas esse comportamento deve ser considerado 
 ├── docker-compose.yml
 ├── README.md
 ├── .gitignore
+├── grafana/
+│   ├── dashboards/
+│   │   └── fiware-sensor.json
+│   └── provisioning/
+│       ├── dashboards/
+│       │   └── dashboards.yml
+│       └── datasources/
+│           └── postgres.yml
 └── docs/
     └── relatorio.md
 ```
 
 ## Status da integração
 
-- IoT Agent -> Orion-LD: funcionando
 - MQTT -> IoT Agent: funcionando
+- IoT Agent -> Orion-LD: funcionando
 - Orion-LD -> QuantumLeap -> CrateDB: funcionando
 - Orion-LD -> Draco -> PostgreSQL: funcionando
+- PostgreSQL -> Grafana: configurado
 
 ## Autor
 
