@@ -1,0 +1,421 @@
+{
+  "info": {
+    "name": "MVP Tráfego FIWARE",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Etapa 1 - Hello World dos componentes",
+      "item": [
+        {
+          "name": "Orion-LD versão",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:1026/version",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "1026",
+              "path": [
+                "version"
+              ]
+            }
+          }
+        },
+        {
+          "name": "IoT Agent sobre",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:4041/iot/about",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4041",
+              "path": [
+                "iot",
+                "about"
+              ]
+            }
+          }
+        },
+        {
+          "name": "QuantumLeap versão",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8668/version",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8668",
+              "path": [
+                "version"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Grafana saúde",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/api/health",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "health"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CrateDB status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:4200/",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4200",
+              "path": [
+                ""
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Etapa 3 - Contexto e IoT Agent",
+      "item": [
+        {
+          "name": "3.1 Criar RoadSegments",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "NGSILD-Tenant",
+                "value": "transito"
+              },
+              {
+                "key": "Link",
+                "value": "<https://smart-data-models.github.io/dataModel.Transportation/context.jsonld>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\""
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:1026/ngsi-ld/v1/entityOperations/create",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "1026",
+              "path": [
+                "ngsi-ld",
+                "v1",
+                "entityOperations",
+                "create"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"id\": \"urn:ngsi-ld:RoadSegment:avenida-principal-a\",\n    \"type\": \"RoadSegment\",\n    \"name\": {\n      \"type\": \"Property\",\n      \"value\": \"Avenida Principal - Trecho A (Norte)\"\n    },\n    \"refRoad\": {\n      \"type\": \"Relationship\",\n      \"object\": \"urn:ngsi-ld:Road:avenida-principal\"\n    },\n    \"startPoint\": {\n      \"type\": \"GeoProperty\",\n      \"value\": {\n        \"type\": \"Point\",\n        \"coordinates\": [\n          -46.65,\n          -10.1\n        ]\n      }\n    },\n    \"endPoint\": {\n      \"type\": \"GeoProperty\",\n      \"value\": {\n        \"type\": \"Point\",\n        \"coordinates\": [\n          -46.65,\n          -10.109\n        ]\n      }\n    },\n    \"location\": {\n      \"type\": \"GeoProperty\",\n      \"value\": {\n        \"type\": \"LineString\",\n        \"coordinates\": [\n          [\n            -46.65,\n            -10.1\n          ],\n          [\n            -46.65,\n            -10.109\n          ]\n        ]\n      }\n    },\n    \"allowedVehicleType\": {\n      \"type\": \"Property\",\n      \"value\": [\n        \"car\",\n        \"bus\",\n        \"motorcycle\",\n        \"lorry\"\n      ]\n    },\n    \"totalLaneNumber\": {\n      \"type\": \"Property\",\n      \"value\": 3\n    },\n    \"maximumAllowedSpeed\": {\n      \"type\": \"Property\",\n      \"value\": 60,\n      \"unitCode\": \"KMH\"\n    },\n    \"length\": {\n      \"type\": \"Property\",\n      \"value\": 1.0,\n      \"unitCode\": \"KMT\"\n    }\n  },\n  {\n    \"id\": \"urn:ngsi-ld:RoadSegment:avenida-principal-b\",\n    \"type\": \"RoadSegment\",\n    \"name\": {\n      \"type\": \"Property\",\n      \"value\": \"Avenida Principal - Trecho B (Sul)\"\n    },\n    \"refRoad\": {\n      \"type\": \"Relationship\",\n      \"object\": \"urn:ngsi-ld:Road:avenida-principal\"\n    },\n    \"startPoint\": {\n      \"type\": \"GeoProperty\",\n      \"value\": {\n        \"type\": \"Point\",\n        \"coordinates\": [\n          -46.65,\n          -10.109\n        ]\n      }\n    },\n    \"endPoint\": {\n      \"type\": \"GeoProperty\",\n      \"value\": {\n        \"type\": \"Point\",\n        \"coordinates\": [\n          -46.65,\n          -10.117\n        ]\n      }\n    },\n    \"location\": {\n      \"type\": \"GeoProperty\",\n      \"value\": {\n        \"type\": \"LineString\",\n        \"coordinates\": [\n          [\n            -46.65,\n            -10.109\n          ],\n          [\n            -46.65,\n            -10.117\n          ]\n        ]\n      }\n    },\n    \"allowedVehicleType\": {\n      \"type\": \"Property\",\n      \"value\": [\n        \"car\",\n        \"bus\",\n        \"motorcycle\",\n        \"lorry\"\n      ]\n    },\n    \"totalLaneNumber\": {\n      \"type\": \"Property\",\n      \"value\": 2\n    },\n    \"maximumAllowedSpeed\": {\n      \"type\": \"Property\",\n      \"value\": 50,\n      \"unitCode\": \"KMH\"\n    },\n    \"length\": {\n      \"type\": \"Property\",\n      \"value\": 0.9,\n      \"unitCode\": \"KMT\"\n    }\n  }\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "3.1 Listar RoadSegments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "NGSILD-Tenant",
+                "value": "transito"
+              },
+              {
+                "key": "Link",
+                "value": "<https://smart-data-models.github.io/dataModel.Transportation/context.jsonld>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\""
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:1026/ngsi-ld/v1/entities?type=RoadSegment",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "1026",
+              "path": [
+                "ngsi-ld",
+                "v1",
+                "entities"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "RoadSegment"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.2 Criar service group",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "fiware-service",
+                "value": "transito"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4041/iot/services",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4041",
+              "path": [
+                "iot",
+                "services"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"services\": [\n    {\n      \"apikey\": \"chave-trafego\",\n      \"cbroker\": \"http://orion-ld:1026\",\n      \"entity_type\": \"TrafficFlowObserved\",\n      \"resource\": \"/iot/json\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "3.2 Listar service groups",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "transito"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4041/iot/services",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4041",
+              "path": [
+                "iot",
+                "services"
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.3 Registrar sensores",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "fiware-service",
+                "value": "transito"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4041/iot/devices",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4041",
+              "path": [
+                "iot",
+                "devices"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"devices\": [\n    {\n      \"device_id\": \"sensor-trafego-a\",\n      \"entity_name\": \"urn:ngsi-ld:TrafficFlowObserved:sensor-trafego-a\",\n      \"entity_type\": \"TrafficFlowObserved\",\n      \"apikey\": \"chave-trafego\",\n      \"transport\": \"MQTT\",\n      \"attributes\": [\n        {\n          \"object_id\": \"v\",\n          \"name\": \"averageVehicleSpeed\",\n          \"type\": \"Number\"\n        },\n        {\n          \"object_id\": \"q\",\n          \"name\": \"intensity\",\n          \"type\": \"Number\"\n        },\n        {\n          \"object_id\": \"o\",\n          \"name\": \"occupancy\",\n          \"type\": \"Number\"\n        },\n        {\n          \"name\": \"congested\",\n          \"type\": \"Boolean\",\n          \"expression\": \"o > 0.25\"\n        },\n        {\n          \"name\": \"dateObserved\",\n          \"type\": \"DateTime\",\n          \"expression\": \"TimeInstant\"\n        }\n      ],\n      \"static_attributes\": [\n        {\n          \"name\": \"refRoadSegment\",\n          \"type\": \"Relationship\",\n          \"value\": \"urn:ngsi-ld:RoadSegment:avenida-principal-a\"\n        },\n        {\n          \"name\": \"laneId\",\n          \"type\": \"Number\",\n          \"value\": 1\n        },\n        {\n          \"name\": \"laneDirection\",\n          \"type\": \"Text\",\n          \"value\": \"forward\"\n        },\n        {\n          \"name\": \"location\",\n          \"type\": \"geo:json\",\n          \"value\": {\n            \"type\": \"Point\",\n            \"coordinates\": [\n              -46.65,\n              -10.1045\n            ]\n          }\n        },\n        {\n          \"name\": \"dataProvider\",\n          \"type\": \"Text\",\n          \"value\": \"simulador-mvp\"\n        }\n      ]\n    },\n    {\n      \"device_id\": \"sensor-trafego-b\",\n      \"entity_name\": \"urn:ngsi-ld:TrafficFlowObserved:sensor-trafego-b\",\n      \"entity_type\": \"TrafficFlowObserved\",\n      \"apikey\": \"chave-trafego\",\n      \"transport\": \"MQTT\",\n      \"attributes\": [\n        {\n          \"object_id\": \"v\",\n          \"name\": \"averageVehicleSpeed\",\n          \"type\": \"Number\"\n        },\n        {\n          \"object_id\": \"q\",\n          \"name\": \"intensity\",\n          \"type\": \"Number\"\n        },\n        {\n          \"object_id\": \"o\",\n          \"name\": \"occupancy\",\n          \"type\": \"Number\"\n        },\n        {\n          \"name\": \"congested\",\n          \"type\": \"Boolean\",\n          \"expression\": \"o > 0.25\"\n        },\n        {\n          \"name\": \"dateObserved\",\n          \"type\": \"DateTime\",\n          \"expression\": \"TimeInstant\"\n        }\n      ],\n      \"static_attributes\": [\n        {\n          \"name\": \"refRoadSegment\",\n          \"type\": \"Relationship\",\n          \"value\": \"urn:ngsi-ld:RoadSegment:avenida-principal-b\"\n        },\n        {\n          \"name\": \"laneId\",\n          \"type\": \"Number\",\n          \"value\": 1\n        },\n        {\n          \"name\": \"laneDirection\",\n          \"type\": \"Text\",\n          \"value\": \"forward\"\n        },\n        {\n          \"name\": \"location\",\n          \"type\": \"geo:json\",\n          \"value\": {\n            \"type\": \"Point\",\n            \"coordinates\": [\n              -46.65,\n              -10.113\n            ]\n          }\n        },\n        {\n          \"name\": \"dataProvider\",\n          \"type\": \"Text\",\n          \"value\": \"simulador-mvp\"\n        }\n      ]\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "3.3 Listar sensores",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "transito"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4041/iot/devices",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4041",
+              "path": [
+                "iot",
+                "devices"
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.4 Consultar TrafficFlowObserved sensor A",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "NGSILD-Tenant",
+                "value": "transito"
+              },
+              {
+                "key": "Link",
+                "value": "<https://smart-data-models.github.io/dataModel.Transportation/context.jsonld>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\""
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:1026/ngsi-ld/v1/entities/urn:ngsi-ld:TrafficFlowObserved:sensor-trafego-a",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "1026",
+              "path": [
+                "ngsi-ld",
+                "v1",
+                "entities",
+                "urn:ngsi-ld:TrafficFlowObserved:sensor-trafego-a"
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.4 Consultar TrafficFlowObserved sensor B",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "NGSILD-Tenant",
+                "value": "transito"
+              },
+              {
+                "key": "Link",
+                "value": "<https://smart-data-models.github.io/dataModel.Transportation/context.jsonld>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\""
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:1026/ngsi-ld/v1/entities/urn:ngsi-ld:TrafficFlowObserved:sensor-trafego-b",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "1026",
+              "path": [
+                "ngsi-ld",
+                "v1",
+                "entities",
+                "urn:ngsi-ld:TrafficFlowObserved:sensor-trafego-b"
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.4 Listar TrafficFlowObserved",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "NGSILD-Tenant",
+                "value": "transito"
+              },
+              {
+                "key": "Link",
+                "value": "<https://smart-data-models.github.io/dataModel.Transportation/context.jsonld>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\""
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:1026/ngsi-ld/v1/entities?type=TrafficFlowObserved",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "1026",
+              "path": [
+                "ngsi-ld",
+                "v1",
+                "entities"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "TrafficFlowObserved"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
