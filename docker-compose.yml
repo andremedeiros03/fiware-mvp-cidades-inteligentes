@@ -1,19 +1,18 @@
 services:
 
   mongo-db:
-    image: mongo:4.2
+    image: mongo:4.4
     hostname: mongo-db
     container_name: mongo-db
     ports:
       - "27017:27017"
-    command: --nojournal
     volumes:
       - mongo-data:/data/db
     networks:
       - fiware-net
 
   orion-ld:
-    image: quay.io/fiware/orion-ld
+    image: quay.io/fiware/orion-ld:1.12.0
     hostname: orion-ld
     container_name: orion-ld
     depends_on:
@@ -25,7 +24,7 @@ services:
       - fiware-net
 
   driver-downloader:
-    image: alpine:latest
+    image: alpine:3.24
     container_name: driver-downloader
     command: >
       sh -c "if [ ! -f /drivers/postgresql.jar ]; then
@@ -54,7 +53,7 @@ services:
       - fiware-net
 
   draco:
-    image: fiware/draco:latest
+    image: fiware/draco:2.1.0
     container_name: fiware-draco
     environment:
       - NIFI_WEB_HTTP_PORT=9090
@@ -63,6 +62,7 @@ services:
       - "5050:5050"
     volumes:
       - draco-drivers:/opt/nifi/nifi-current/drivers
+      - draco-conf:/opt/nifi/nifi-current/conf
     depends_on:
       driver-downloader:
         condition: service_completed_successfully
@@ -87,7 +87,7 @@ services:
       - fiware-net
 
   quantumleap:
-    image: orchestracities/quantumleap:latest
+    image: orchestracities/quantumleap:1.0.0
     container_name: fiware-quantumleap
     ports:
       - "8668:8668"
@@ -101,7 +101,7 @@ services:
       - fiware-net
 
   mosquitto:
-    image: eclipse-mosquitto:2.0
+    image: eclipse-mosquitto:2.0.22
     container_name: mosquitto
     ports:
       - "1883:1883"
@@ -118,7 +118,7 @@ services:
       - fiware-net
 
   iot-agent:
-    image: telefonicaiot/iotagent-json:latest
+    image: fiware/iotagent-json:3.14.0
     container_name: fiware-iot-agent
     ports:
       - "4041:4041"
@@ -132,7 +132,7 @@ services:
       - IOTA_MQTT_HOST=mosquitto
       - IOTA_MQTT_PORT=1883
       - IOTA_PROVIDER_URL=http://fiware-iot-agent:4041
-      - IOTA_JSON_LD_CONTEXT=https://raw.githubusercontent.com/smart-data-models/dataModel.Device/master/context.jsonld
+      - IOTA_JSON_LD_CONTEXT=https://smart-data-models.github.io/dataModel.Transportation/context.jsonld
       - IOTA_AUTOCACHE=true
       - IOTA_DEFAULT_EXPRESSION_LANGUAGE=jexl
     depends_on:
@@ -169,6 +169,7 @@ volumes:
   mongo-data:
   pgdata:
   draco-drivers:
+  draco-conf:
   cratedata:
   mongo-iota-data:
   grafana-data:
