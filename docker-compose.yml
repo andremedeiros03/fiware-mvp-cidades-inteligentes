@@ -141,6 +141,18 @@ services:
     networks:
       - fiware-net
 
+  simulador:
+    build: ./simulador
+    profiles:
+      - simulador
+    environment:
+      - MQTT_HOST=mosquitto
+      - MQTT_PORT=1883
+    depends_on:
+      - mosquitto
+    networks:
+      - fiware-net
+
   grafana:
     image: grafana/grafana:13.2.2
     container_name: grafana
