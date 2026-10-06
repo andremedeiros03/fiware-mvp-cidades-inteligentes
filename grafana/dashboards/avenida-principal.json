@@ -1,0 +1,935 @@
+{
+  "uid": "avenida-principal",
+  "title": "Avenida Principal: monitoramento de tráfego",
+  "description": "Velocidade, fluxo, ocupação e congestionamento dos trechos A e B a partir do histórico do QuantumLeap.",
+  "tags": [
+    "fiware",
+    "trafego",
+    "TrafficFlowObserved"
+  ],
+  "timezone": "browser",
+  "editable": true,
+  "graphTooltip": 1,
+  "refresh": "1m",
+  "schemaVersion": 41,
+  "time": {
+    "from": "2026-10-06T03:00:00.000Z",
+    "to": "2026-10-07T03:00:00.000Z"
+  },
+  "timepicker": {},
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "type": "row",
+      "title": "Agora",
+      "id": 2,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "panels": []
+    },
+    {
+      "type": "stat",
+      "title": "Velocidade atual",
+      "description": "Última velocidade média medida em cada trecho no intervalo selecionado.",
+      "id": 3,
+      "pluginVersion": "13.2.2",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "cratedb"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "cratedb"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT max_by(averagevehiclespeed, time_index) AS \"Trecho A (Norte)\" FROM mttransito.ettrafficflowobserved WHERE $__timeFilter(time_index) AND entity_id LIKE '%-a'"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "cratedb"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT max_by(averagevehiclespeed, time_index) AS \"Trecho B (Sul)\" FROM mttransito.ettrafficflowobserved WHERE $__timeFilter(time_index) AND entity_id LIKE '%-b'"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "velocitykmh",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 25
+              },
+              {
+                "color": "green",
+                "value": 35
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "orientation": "horizontal"
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "Índice de lentidão",
+      "description": "Velocidade atual dividida pela velocidade de fluxo livre do trecho (A: 60 km/h, B: 50 km/h). 1 = livre; abaixo de 0,5 = lento.",
+      "id": 4,
+      "pluginVersion": "13.2.2",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "cratedb"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 1,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "cratedb"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT max_by(averagevehiclespeed, time_index) / 60.0 AS \"Trecho A (Norte)\" FROM mttransito.ettrafficflowobserved WHERE $__timeFilter(time_index) AND entity_id LIKE '%-a'"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "cratedb"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT max_by(averagevehiclespeed, time_index) / 50.0 AS \"Trecho B (Sul)\" FROM mttransito.ettrafficflowobserved WHERE $__timeFilter(time_index) AND entity_id LIKE '%-b'"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.5
+              },
+              {
+                "color": "green",
+                "value": 0.75
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdMarkers": true,
+        "showThresholdLabels": false
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Estado atual",
+      "description": "Estado calculado pelo IoT Agent: congestionado quando a ocupação passa de 0,25.",
+      "id": 5,
+      "pluginVersion": "13.2.2",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "cratedb"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 1,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "cratedb"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT CASE WHEN max_by(congested, time_index) THEN 1 ELSE 0 END AS \"Trecho A (Norte)\" FROM mttransito.ettrafficflowobserved WHERE $__timeFilter(time_index) AND entity_id LIKE '%-a'"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "cratedb"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT CASE WHEN max_by(congested, time_index) THEN 1 ELSE 0 END AS \"Trecho B (Sul)\" FROM mttransito.ettrafficflowobserved WHERE $__timeFilter(time_index) AND entity_id LIKE '%-b'"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Livre",
+                  "color": "green",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Congestionado",
+                  "color": "red",
+                  "index": 1
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "orientation": "horizontal"
+      }
+    },
+    {
+      "type": "row",
+      "title": "Evolução",
+      "id": 6,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Velocidade média",
+      "description": "Velocidade média dos veículos em cada período de 5 minutos.",
+      "id": 7,
+      "pluginVersion": "13.2.2",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "cratedb"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 7,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "cratedb"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "time_series",
+          "rawSql": "SELECT time_index AS \"time\", CASE WHEN entity_id LIKE '%-a' THEN 'Trecho A (Norte)' ELSE 'Trecho B (Sul)' END AS metric, averagevehiclespeed AS value FROM mttransito.ettrafficflowobserved WHERE $__timeFilter(time_index) ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "velocitykmh",
+          "min": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Trecho A (Norte)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Trecho B (Sul)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Fluxo de veículos",
+      "description": "Veículos por hora, calculados a partir da contagem de cada período de 5 minutos.",
+      "id": 8,
+      "pluginVersion": "13.2.2",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "cratedb"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 7,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "cratedb"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "time_series",
+          "rawSql": "SELECT time_index AS \"time\", CASE WHEN entity_id LIKE '%-a' THEN 'Trecho A (Norte)' ELSE 'Trecho B (Sul)' END AS metric, intensity * 12 AS value FROM mttransito.ettrafficflowobserved WHERE $__timeFilter(time_index) ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "veíc/h",
+          "min": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Trecho A (Norte)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Trecho B (Sul)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Ocupação",
+      "description": "Fração do tempo com um veículo sobre o sensor. A linha vermelha marca o limite de congestionamento (0,25).",
+      "id": 9,
+      "pluginVersion": "13.2.2",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "cratedb"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 15,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "cratedb"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "time_series",
+          "rawSql": "SELECT time_index AS \"time\", CASE WHEN entity_id LIKE '%-a' THEN 'Trecho A (Norte)' ELSE 'Trecho B (Sul)' END AS metric, occupancy AS value FROM mttransito.ettrafficflowobserved WHERE $__timeFilter(time_index) ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true,
+            "thresholdsStyle": {
+              "mode": "line+area"
+            }
+          },
+          "unit": "percentunit",
+          "min": 0,
+          "max": 0.6,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 0.25
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Trecho A (Norte)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Trecho B (Sul)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "type": "state-timeline",
+      "title": "Estado dos trechos",
+      "description": "Períodos de congestionamento de cada trecho.",
+      "id": 10,
+      "pluginVersion": "13.2.2",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "cratedb"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 15,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "cratedb"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "time_series",
+          "rawSql": "SELECT time_index AS \"time\", CASE WHEN entity_id LIKE '%-a' THEN 'Trecho A (Norte)' ELSE 'Trecho B (Sul)' END AS metric, CASE WHEN congested THEN 1 ELSE 0 END AS value FROM mttransito.ettrafficflowobserved WHERE $__timeFilter(time_index) ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Livre",
+                  "color": "green",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Congestionado",
+                  "color": "red",
+                  "index": 1
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "custom": {
+            "fillOpacity": 80,
+            "lineWidth": 0
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showValue": "never",
+        "mergeValues": true,
+        "rowHeight": 0.8,
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "Análise",
+      "id": 11,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 23
+      },
+      "panels": []
+    },
+    {
+      "type": "xychart",
+      "title": "Fluxo × ocupação (diagrama fundamental)",
+      "description": "Cada ponto é um período de 5 minutos. O fluxo cresce com a ocupação até a capacidade da via; depois disso, mais veículos significam menos fluxo.",
+      "id": 12,
+      "pluginVersion": "13.2.2",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "cratedb"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "w": 12,
+        "h": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "cratedb"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT occupancy AS \"Ocupação\", intensity * 12 AS \"Trecho A (Norte)\" FROM mttransito.ettrafficflowobserved WHERE $__timeFilter(time_index) AND entity_id LIKE '%-a'"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "cratedb"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT occupancy AS \"Ocupação\", intensity * 12 AS \"Trecho B (Sul)\" FROM mttransito.ettrafficflowobserved WHERE $__timeFilter(time_index) AND entity_id LIKE '%-b'"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "show": "points",
+            "pointSize": {
+              "fixed": 5
+            }
+          },
+          "unit": "veíc/h"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Trecho A (Norte)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Trecho B (Sul)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Ocupação"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "mapping": "auto",
+        "series": [],
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      }
+    },
+    {
+      "type": "barchart",
+      "title": "Velocidade média por hora do dia",
+      "description": "Média da velocidade em cada hora do dia (horário local, UTC−3). Com vários dias simulados, mostra o padrão recorrente.",
+      "id": 13,
+      "pluginVersion": "13.2.2",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "cratedb"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 24,
+        "w": 12,
+        "h": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "cratedb"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT concat(lpad(cast(extract(hour FROM time_index - INTERVAL '3 hours') AS text), 2, '0'), 'h') AS \"Hora\", avg(CASE WHEN entity_id LIKE '%-a' THEN averagevehiclespeed END) AS \"Trecho A (Norte)\", avg(CASE WHEN entity_id LIKE '%-b' THEN averagevehiclespeed END) AS \"Trecho B (Sul)\" FROM mttransito.ettrafficflowobserved WHERE $__timeFilter(time_index) GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "velocitykmh",
+          "decimals": 1,
+          "min": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Trecho A (Norte)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Trecho B (Sul)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "xField": "Hora",
+        "orientation": "vertical",
+        "groupWidth": 0.8,
+        "barWidth": 0.9,
+        "showValue": "never",
+        "xTickLabelSpacing": 100,
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "Persistência",
+      "id": 14,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 34
+      },
+      "panels": []
+    },
+    {
+      "type": "stat",
+      "title": "Registros no histórico",
+      "description": "Número de medições gravadas no intervalo por cada componente de persistência. Os dois valores devem ser iguais.",
+      "id": 15,
+      "pluginVersion": "13.2.2",
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Mixed --"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 35,
+        "w": 24,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "cratedb"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT count(*) AS \"QuantumLeap → CrateDB\" FROM mttransito.ettrafficflowobserved WHERE $__timeFilter(time_index)"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "fiware-postgres"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT count(*) AS \"Draco → PostgreSQL\" FROM transito.trafficflowobserved WHERE averagevehiclespeed_observedat::timestamptz BETWEEN $__timeFrom() AND $__timeTo()"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "orientation": "horizontal"
+      }
+    }
+  ]
+}
