@@ -20,3 +20,6 @@ drivers/
 *.bak
 *.swp
 *~
+
+# Python
+__pycache__/

@@ -135,9 +135,21 @@ services:
       - IOTA_JSON_LD_CONTEXT=https://smart-data-models.github.io/dataModel.Transportation/context.jsonld
       - IOTA_AUTOCACHE=true
       - IOTA_DEFAULT_EXPRESSION_LANGUAGE=jexl
+      - IOTA_AMQP_DISABLED=true
     depends_on:
       - mosquitto
       - mongo-iota
+    networks:
+      - fiware-net
+
+  provisionamento:
+    build: ./provisionamento
+    profiles:
+      - setup
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-draco_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-draco_password}
+      POSTGRES_DB: ${POSTGRES_DB:-fiware_data}
     networks:
       - fiware-net
 
