@@ -416,6 +416,441 @@
           }
         }
       ]
+    },
+    {
+      "name": "Etapa 4 - Histórico (QuantumLeap e Draco)",
+      "item": [
+        {
+          "name": "4.1 Criar subscription QuantumLeap",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "NGSILD-Tenant",
+                "value": "transito"
+              },
+              {
+                "key": "Link",
+                "value": "<https://smart-data-models.github.io/dataModel.Transportation/context.jsonld>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\""
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:1026/ngsi-ld/v1/subscriptions",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "1026",
+              "path": [
+                "ngsi-ld",
+                "v1",
+                "subscriptions"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"urn:ngsi-ld:Subscription:quantumleap-trafficflowobserved\",\n  \"type\": \"Subscription\",\n  \"description\": \"Histórico de TrafficFlowObserved no QuantumLeap\",\n  \"entities\": [\n    {\n      \"type\": \"TrafficFlowObserved\"\n    }\n  ],\n  \"watchedAttributes\": [\n    \"averageVehicleSpeed\",\n    \"intensity\",\n    \"occupancy\",\n    \"congested\"\n  ],\n  \"notification\": {\n    \"endpoint\": {\n      \"uri\": \"http://fiware-quantumleap:8668/v2/notify\",\n      \"accept\": \"application/json\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "4.1 Listar tabelas do tenant no CrateDB",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4200/_sql",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4200",
+              "path": [
+                "_sql"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stmt\": \"SELECT table_schema, table_name FROM information_schema.tables WHERE table_schema = 'mttransito'\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "4.2 Criar entidade de preparo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "NGSILD-Tenant",
+                "value": "transito"
+              },
+              {
+                "key": "Link",
+                "value": "<https://smart-data-models.github.io/dataModel.Transportation/context.jsonld>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\""
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:1026/ngsi-ld/v1/entities",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "1026",
+              "path": [
+                "ngsi-ld",
+                "v1",
+                "entities"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"urn:ngsi-ld:TrafficFlowObserved:preparo\",\n  \"type\": \"TrafficFlowObserved\",\n  \"averageVehicleSpeed\": {\n    \"type\": \"Property\",\n    \"value\": 0.5,\n    \"observedAt\": \"2000-01-01T00:00:00Z\"\n  },\n  \"occupancy\": {\n    \"type\": \"Property\",\n    \"value\": 0.5,\n    \"observedAt\": \"2000-01-01T00:00:00Z\"\n  },\n  \"intensity\": {\n    \"type\": \"Property\",\n    \"value\": 1,\n    \"observedAt\": \"2000-01-01T00:00:00Z\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "4.2 Tipos das colunas no CrateDB",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4200/_sql",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4200",
+              "path": [
+                "_sql"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stmt\": \"SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = 'mttransito' AND table_name = 'ettrafficflowobserved'\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "4.2 Apagar histórico no QuantumLeap",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Fiware-Service",
+                "value": "transito"
+              },
+              {
+                "key": "Fiware-ServicePath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8668/v2/types/TrafficFlowObserved",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8668",
+              "path": [
+                "v2",
+                "types",
+                "TrafficFlowObserved"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4.2 Apagar entidade de preparo",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "NGSILD-Tenant",
+                "value": "transito"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:1026/ngsi-ld/v1/entities/urn:ngsi-ld:TrafficFlowObserved:preparo",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "1026",
+              "path": [
+                "ngsi-ld",
+                "v1",
+                "entities",
+                "urn:ngsi-ld:TrafficFlowObserved:preparo"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4.4 Criar subscription Draco",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "NGSILD-Tenant",
+                "value": "transito"
+              },
+              {
+                "key": "Link",
+                "value": "<https://smart-data-models.github.io/dataModel.Transportation/context.jsonld>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\""
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:1026/ngsi-ld/v1/subscriptions",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "1026",
+              "path": [
+                "ngsi-ld",
+                "v1",
+                "subscriptions"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"urn:ngsi-ld:Subscription:draco-trafficflowobserved\",\n  \"type\": \"Subscription\",\n  \"description\": \"Persistência de TrafficFlowObserved no Draco\",\n  \"entities\": [\n    {\n      \"type\": \"TrafficFlowObserved\"\n    }\n  ],\n  \"watchedAttributes\": [\n    \"averageVehicleSpeed\",\n    \"intensity\",\n    \"occupancy\",\n    \"congested\"\n  ],\n  \"notification\": {\n    \"endpoint\": {\n      \"uri\": \"http://fiware-draco:5050/v2/notify\",\n      \"accept\": \"application/json\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "4.4 Listar subscriptions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "NGSILD-Tenant",
+                "value": "transito"
+              },
+              {
+                "key": "Link",
+                "value": "<https://smart-data-models.github.io/dataModel.Transportation/context.jsonld>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\""
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:1026/ngsi-ld/v1/subscriptions",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "1026",
+              "path": [
+                "ngsi-ld",
+                "v1",
+                "subscriptions"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4.4 Remover subscription Draco",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "NGSILD-Tenant",
+                "value": "transito"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:1026/ngsi-ld/v1/subscriptions/urn:ngsi-ld:Subscription:draco-trafficflowobserved",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "1026",
+              "path": [
+                "ngsi-ld",
+                "v1",
+                "subscriptions",
+                "urn:ngsi-ld:Subscription:draco-trafficflowobserved"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4.4 Remover subscription QuantumLeap",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "NGSILD-Tenant",
+                "value": "transito"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:1026/ngsi-ld/v1/subscriptions/urn:ngsi-ld:Subscription:quantumleap-trafficflowobserved",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "1026",
+              "path": [
+                "ngsi-ld",
+                "v1",
+                "subscriptions",
+                "urn:ngsi-ld:Subscription:quantumleap-trafficflowobserved"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4.5 Histórico de velocidade no QuantumLeap (sensor B)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Fiware-Service",
+                "value": "transito"
+              },
+              {
+                "key": "Fiware-ServicePath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8668/v2/entities/urn:ngsi-ld:TrafficFlowObserved:sensor-trafego-b/attrs/averageVehicleSpeed?lastN=5",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8668",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:TrafficFlowObserved:sensor-trafego-b",
+                "attrs",
+                "averageVehicleSpeed"
+              ],
+              "query": [
+                {
+                  "key": "lastN",
+                  "value": "5"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "4.5 Histórico completo no QuantumLeap (sensor A)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Fiware-Service",
+                "value": "transito"
+              },
+              {
+                "key": "Fiware-ServicePath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8668/v2/entities/urn:ngsi-ld:TrafficFlowObserved:sensor-trafego-a?lastN=5",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8668",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:TrafficFlowObserved:sensor-trafego-a"
+              ],
+              "query": [
+                {
+                  "key": "lastN",
+                  "value": "5"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "4.5 Histórico no CrateDB",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4200/_sql",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4200",
+              "path": [
+                "_sql"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stmt\": \"SELECT time_index, entity_id, averagevehiclespeed, intensity, occupancy, congested, refroadsegment FROM mttransito.ettrafficflowobserved ORDER BY time_index\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
     }
   ]
 }
