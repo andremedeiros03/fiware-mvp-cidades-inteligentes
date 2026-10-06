@@ -1,299 +1,177 @@
-# Protótipo de Infraestrutura FIWARE para Cidades Inteligentes
+# MVP FIWARE: monitoramento de tráfego urbano
 
-Este repositório contém um **protótipo técnico e reutilizável** de infraestrutura FIWARE desenvolvido para apoiar a construção de um MVP no contexto de Internet das Coisas e Cidades Inteligentes.
+MVP de Cidades Inteligentes que monitora o fluxo de veículos em um corredor viário com Generic Enablers (GEs) FIWARE e NGSI-LD.
 
-A ideia central do projeto ainda será definida. O cenário atual de **sensor de temperatura e umidade** foi usado apenas para validar o funcionamento da arquitetura completa, desde a publicação via MQTT até a persistência e visualização dos dados.
+Dois sensores de tráfego virtuais, um em cada trecho da **Avenida Principal** (via fictícia), publicam a cada 5 minutos a velocidade média, o número de veículos e a ocupação da faixa. A plataforma mantém o estado atual de cada trecho, marca os períodos de congestionamento, guarda o histórico e mostra os indicadores em um dashboard.
 
-A infraestrutura já validada poderá ser reaproveitada quando o problema real do projeto for escolhido. Nesse momento, será necessário principalmente adaptar as entidades NGSI-LD, o Data Model, os atributos dos dispositivos, os tópicos MQTT, as subscriptions e o dashboard.
+Os dados são **sintéticos**, gerados por um simulador com perfil diário de tráfego e modelo de Greenshields.
 
-## Objetivo deste protótipo
-
-Validar uma arquitetura FIWARE capaz de:
-
-- receber dados de dispositivos via MQTT;
-- integrar dispositivos com o FIWARE por meio do IoT Agent;
-- gerenciar contexto com o Orion-LD;
-- armazenar histórico com QuantumLeap e CrateDB;
-- persistir notificações com Draco e PostgreSQL;
-- visualizar dados em dashboards com Grafana.
-
-## Arquitetura validada
+## Arquitetura
 
 ```text
-Sensor / Cliente MQTT
-        |
-        v
-   Mosquitto MQTT
-        |
-        v
- IoT Agent JSON
-        |
-        v
-    Orion-LD
-      /   \
-     v     v
- QuantumLeap   Draco
-     |          |
-     v          v
-  CrateDB   PostgreSQL
-                |
-                v
-              Grafana
+ Simulador de sensores
+        │ MQTT (JSON)
+        ▼
+    Mosquitto ──────► IoT Agent JSON ──────► Orion-LD ◄──── MongoDB
+                                             │      │
+                             subscription NGSI-LD   subscription NGSI-LD
+                                             ▼      ▼
+                                    QuantumLeap    Draco (NiFi)
+                                             │      │
+                                             ▼      ▼
+                                       CrateDB    PostgreSQL
+                                             │
+                                             ▼
+                                          Grafana
 ```
 
-## Componentes utilizados
+| Componente | Função | Versão | Porta local |
+|---|---|---|---:|
+| Orion-LD | Context Broker NGSI-LD | 1.12.0 | 1026 |
+| MongoDB | Base do Orion-LD | 4.4 | 27017 |
+| IoT Agent JSON | Converte mensagens MQTT em NGSI-LD | 3.14.0 | 4041 |
+| MongoDB | Registro do IoT Agent | 6.0 | — |
+| Mosquitto | Broker MQTT | 2.0.22 | 1883 |
+| QuantumLeap | Histórico temporal (API) | 1.0.0 | 8668 |
+| CrateDB | Banco do QuantumLeap | 5.5 | 4200 (HTTP) / 5433 (PostgreSQL) |
+| Draco | Persistência de notificações (Apache NiFi) | 2.1.0 | 9090 (interface) / 5050 (notificações) |
+| PostgreSQL | Banco do Draco | 15 | 5432 |
+| Grafana | Dashboard | 13.2.2 | 3000 |
 
-| Componente | Função | Porta local |
-|---|---|---:|
-| Orion-LD | Context Broker NGSI-LD | 1026 |
-| MongoDB | Persistência do Orion-LD | 27017 |
-| IoT Agent JSON | Integração entre dispositivos/MQTT e Orion-LD | 4041 |
-| Mosquitto | Broker MQTT | 1883 |
-| QuantumLeap | Histórico temporal de contexto | 8668 |
-| CrateDB | Banco temporal utilizado pelo QuantumLeap | 4200 / 5433 |
-| Draco | Persistência de notificações do Orion | 9090 / 5050 |
-| PostgreSQL | Persistência utilizada pelo Draco | 5432 |
-| Grafana | Dashboard de visualização | 3000 |
+## Data Model
+
+Smart Data Models, domínio de transporte: <https://github.com/smart-data-models/dataModel.Transportation>
+
+| Entidade | Origem | Identificadores |
+|---|---|---|
+| `RoadSegment` | Provisionamento | `urn:ngsi-ld:RoadSegment:avenida-principal-a`, `...-b` |
+| `TrafficFlowObserved` | Sensores via IoT Agent | `urn:ngsi-ld:TrafficFlowObserved:sensor-trafego-a`, `...-b` |
+
+Todos os dados ficam no tenant `transito`.
 
 ## Pré-requisitos
 
-- Docker
-- Docker Compose
-- Git
-- curl ou Postman para testes HTTP
+- Docker e Docker Compose
+- Cerca de 4 GB de memória livre
+- **Disco com menos de 85% de uso.** Acima disso, o CrateDB não cria tabelas, e o histórico não é gravado.
+- Acesso à internet (o `@context` do Smart Data Models é baixado em tempo de execução)
 
-## Executando o ambiente
+Se o seu usuário não estiver no grupo `docker`, coloque `sudo` antes dos comandos `docker`.
 
-Clone o repositório:
+## Execução
 
-```bash
-git clone https://github.com/andremedeiros03/fiware-mvp-cidades-inteligentes.git
-```
-
-Entre na pasta:
-
-```bash
-cd fiware-mvp-cidades-inteligentes
-```
-
-Suba os serviços:
+### 1. Subir os serviços
 
 ```bash
 docker compose up -d
-```
-
-Confira os containers:
-
-```bash
 docker compose ps
 ```
 
-## Cenário atual de validação
+O `driver-downloader` termina com `Exited (0)` depois de baixar o driver JDBC do Draco.
 
-O cenário usado até aqui é apenas um exemplo técnico para comprovar o funcionamento da infraestrutura.
-
-Entidade utilizada:
-
-```text
-urn:ngsi-ld:Device:sensor-temperatura-001
-```
-
-Tipo:
-
-```text
-Device
-```
-
-Atributos principais:
-
-- `temperature`
-- `humidity`
-
-Quando a ideia central do projeto for definida, essa entidade e seus atributos serão substituídos ou adaptados para o domínio escolhido.
-
-## MQTT
-
-Tópico utilizado no cenário de teste:
-
-```text
-/json/minha-chave-secreta-456/sensor-temperatura-001/attrs
-```
-
-Exemplo de publicação:
+### 2. Provisionar o ambiente
 
 ```bash
-docker exec -it mosquitto mosquitto_pub -h localhost -t '/json/minha-chave-secreta-456/sensor-temperatura-001/attrs' -m '{"t":34.2,"h":49.8}'
+docker compose --profile setup run --rm provisionamento
 ```
 
-Aliases utilizados pelo IoT Agent:
+O provisionamento espera os serviços responderem e cria, nessa ordem:
 
-```text
-t -> temperature
-h -> humidity
-```
+1. As entidades `RoadSegment` dos trechos A e B no Orion-LD.
+2. O service group `chave-trafego` e os devices `sensor-trafego-a` e `sensor-trafego-b` no IoT Agent.
+3. A subscription do Orion-LD para o QuantumLeap.
+4. A tabela de histórico no CrateDB, com colunas decimais.
+5. O fluxo `ListenHTTP → NGSIToPostgreSQL → LogAttribute` no Draco.
+6. A subscription do Orion-LD para o Draco.
 
-## Draco + PostgreSQL
+Pode ser executado de novo sem duplicar dados.
 
-Fluxo configurado no Apache NiFi do Draco:
+### 3. Gerar dados
 
-```text
-ListenHTTP -> NGSIToPostgreSQL -> LogAttribute
-```
-
-Configuração utilizada no `NGSIToPostgreSQL`:
-
-| Propriedade | Valor |
-|---|---|
-| JDBC Connection Pool | DBCPConnectionPool |
-| NGSI Version | v2 |
-| Data Model | db-by-service-path |
-| Attribute Persistence | row |
-| Default Service | treinamento_fiware |
-| Default Service path | / |
-| Enable Encoding | true |
-| CKAN compatibility | false |
-| Enable Lowercase | true |
-| Batch Size | 1 durante os testes |
-| Rollback On Failure | false |
-
-Pool JDBC:
-
-```text
-jdbc:postgresql://postgres-db:5432/fiware_data
-```
-
-Driver PostgreSQL no Draco:
-
-```text
-/opt/nifi/nifi-current/drivers/postgresql.jar
-```
-
-### Validação no PostgreSQL
+Gera o equivalente a um dia de tráfego simulado em cerca de 5 minutos:
 
 ```bash
-docker exec -it postgres-db psql -U draco_user -d fiware_data -c '\dn'
+docker compose --profile simulador run --rm simulador --inicio 2026-10-06T00:00:00
 ```
+
+| Parâmetro | Padrão | Descrição |
+|---|---|---|
+| `--inicio` | hoje às 00:00 | Início da simulação (ISO 8601, horário local) |
+| `--dias` | 1 | Dias simulados |
+| `--intervalo` | 1 | Segundos reais por passo de 5 minutos |
+| `--tempo-real` | — | Publica um passo a cada 5 minutos com a hora atual |
+| `--fuso` | -3 | Fuso horário local em horas |
+| `--semente` | 42 | Semente do ruído aleatório |
+
+O QuantumLeap duplica linhas quando recebe a mesma observação duas vezes. Antes de simular de novo um período já simulado, limpe o histórico:
 
 ```bash
-docker exec -it postgres-db psql -U draco_user -d fiware_data -c '\dt treinamento_fiware.*'
+curl -s -X DELETE localhost:8668/v2/types/TrafficFlowObserved \
+  -H 'Fiware-Service: transito' -H 'Fiware-ServicePath: /'
+docker exec postgres-db psql -U draco_user -d fiware_data -c 'TRUNCATE transito.trafficflowobserved;'
 ```
 
-Tabela criada durante os testes:
+### 4. Ver o dashboard
 
-```text
-treinamento_fiware.x002f
-```
+Abra <http://localhost:3000> (admin:admin) → **Dashboards → FIWARE → Avenida Principal: monitoramento de tráfego**.
 
-Consulta dos registros:
+O intervalo padrão é o dia 06/10/2026. No modo `--tempo-real`, troque o intervalo para "Last 6 hours".
+
+## Validação
+
+Defina o cabeçalho de contexto:
 
 ```bash
-docker exec -it postgres-db psql -U draco_user -d fiware_data -c 'SELECT * FROM treinamento_fiware.x002f;'
+LINK='<https://smart-data-models.github.io/dataModel.Transportation/context.jsonld>; rel="http://www.w3.org/ns/json-ld#context"; type="application/ld+json"'
 ```
 
-## QuantumLeap + CrateDB
+Estado atual no Orion-LD:
 
-Exemplo de consulta temporal utilizada na validação:
-
-```http
-GET http://localhost:8668/v2/entities/urn:ngsi-ld:Device:sensor-temperatura-001/attrs/temperature?type=Device&lastN=5
+```bash
+curl -s 'localhost:1026/ngsi-ld/v1/entities?type=TrafficFlowObserved&options=keyValues' \
+  -H 'NGSILD-Tenant: transito' -H "Link: $LINK" | jq
 ```
 
-Foi validado o armazenamento de múltiplas medições históricas da entidade.
+Histórico pela API do QuantumLeap:
 
-## Grafana
-
-O Grafana é provisionado automaticamente pelo Docker Compose.
-
-Acesse:
-
-```text
-http://localhost:3000
+```bash
+curl -s 'localhost:8668/v2/entities/urn:ngsi-ld:TrafficFlowObserved:sensor-trafego-b/attrs/averageVehicleSpeed?lastN=5' \
+  -H 'Fiware-Service: transito' -H 'Fiware-ServicePath: /' | jq
 ```
 
-O datasource `FIWARE PostgreSQL` é configurado automaticamente apontando para o PostgreSQL utilizado pelo Draco.
+Histórico no CrateDB (ou no console <http://localhost:4200/#!/console>):
 
-O dashboard de validação é:
-
-```text
-FIWARE - Sensor de Temperatura e Umidade
+```bash
+curl -s -X POST localhost:4200/_sql -H 'Content-Type: application/json' \
+  -d '{"stmt":"SELECT entity_id, count(*), sum(CASE WHEN congested THEN 1 ELSE 0 END) FROM mttransito.ettrafficflowobserved GROUP BY entity_id"}' | jq .rows
 ```
 
-Ele contém dois painéis de série temporal:
+Histórico no PostgreSQL (Draco):
 
-- Temperatura
-- Umidade
-
-Os painéis consultam diretamente:
-
-```text
-treinamento_fiware.x002f
+```bash
+docker exec postgres-db psql -U draco_user -d fiware_data \
+  -c 'SELECT entityid, count(*) FROM transito.trafficflowobserved GROUP BY entityid;'
 ```
 
-A visualização no Grafana foi validada com sucesso. Quando o domínio definitivo do projeto for escolhido, o dashboard será adaptado aos indicadores relevantes para a solução.
+Depois de um dia simulado, cada sensor tem 288 linhas nos dois bancos.
 
-Arquivos de provisionamento:
+## Testes manuais
 
-```text
-grafana/provisioning/datasources/postgres.yml
-grafana/provisioning/dashboards/dashboards.yml
-grafana/dashboards/fiware-sensor.json
-```
+- [`docs/mqtt.md`](docs/mqtt.md): tópicos, formato das mensagens e casos de teste MQTT com resultados observados.
+- [`hoppscotch/mvp-trafego.postman_collection.json`](hoppscotch/mvp-trafego.postman_collection.json): coleção com as requisições HTTP de cada etapa. Importe no Hoppscotch ou no Postman (formato Postman v2.1).
 
-## Observações técnicas encontradas durante a validação
+## Limitações conhecidas
 
-Durante a configuração e os testes foram identificados alguns pontos importantes:
-
-- o processor `NGSIToPostgreSQL` do Draco funcionou de forma estável com notificações no formato NGSI-v2 normalizado;
-- o modelo `db-by-entity` gerou nomes de tabela grandes demais para o limite de identificadores do PostgreSQL, por isso foi utilizado `db-by-service-path`;
-- no CrateDB, a coluna `temperature` foi inicialmente inferida como `BIGINT`, o que removeu casas decimais de valores posteriores;
-- no PostgreSQL do Draco, o campo `recvtimets` foi persistido como texto e pode conter timestamp em formato ISO, exigindo tratamento na consulta do Grafana.
-
-Esses pontos fazem parte da validação técnica do protótipo e serão considerados na evolução do MVP.
-
-## O que será reutilizado no projeto final
-
-A maior parte desta infraestrutura poderá ser mantida:
-
-- `docker-compose.yml`;
-- Orion-LD;
-- MongoDB;
-- Mosquitto;
-- IoT Agent;
-- Draco;
-- PostgreSQL;
-- QuantumLeap;
-- CrateDB;
-- Grafana;
-- rede Docker;
-- fluxo geral de aquisição, gerenciamento, persistência e visualização.
-
-## O que deverá ser adaptado
-
-Após a definição da ideia central do projeto, deverão ser ajustados:
-
-- problema de Cidades Inteligentes a ser resolvido;
-- beneficiários da solução;
-- entidades e tipos NGSI-LD;
-- Data Model utilizado;
-- atributos e sensores;
-- tópicos MQTT;
-- service groups e devices do IoT Agent;
-- subscriptions do Orion-LD;
-- consultas e painéis do Grafana;
-- documentação e relatório final.
-
-## Próxima etapa
-
-A próxima etapa do projeto é definir a **ideia central do MVP**, incluindo:
-
-1. problema dentro do contexto de Cidades Inteligentes;
-2. público beneficiado;
-3. dados de contexto necessários;
-4. Data Model adequado;
-5. sensores ou fontes de dados;
-6. indicadores que serão exibidos no dashboard.
-
-Depois disso, a infraestrutura deste repositório será adaptada para representar a solução definitiva.
+| Limitação | Efeito | Tratamento no MVP |
+|---|---|---|
+| O Orion-LD 1.12.0 usa o protocolo `OP_QUERY`, removido do MongoDB 5.1 | Não inicia com MongoDB 6.0 ou superior | MongoDB 4.4 para o Orion-LD |
+| O CrateDB não aloca shards com o disco acima de 85% | O QuantumLeap não grava, e o Orion-LD registra timeout | Pré-requisito de disco |
+| O QuantumLeap fixa o tipo da coluna pelo primeiro valor | Um primeiro valor inteiro cria coluna `bigint`, e os decimais seguintes se perdem | O provisionamento cria a tabela com valores decimais |
+| A conversão NGSI-LD → NGSI-v2 do Orion-LD deixa o `observedAt` como texto | O Draco em modo `v2` falha | Draco em modo `ld`, com `db-by-entity-type` |
+| O Orion-LD pode deixar de notificar um destino lento quando duas entidades mudam ao mesmo tempo | O Draco perdeu 4,5% das notificações, sem registro de falha | O simulador espaça as publicações dos sensores |
+| O teste de saúde do Grafana envia um comando vazio, que o CrateDB rejeita | "Save & test" falha no datasource CrateDB | Nenhum: as consultas funcionam |
+| O Draco grava todos os valores como texto | Consultas no PostgreSQL exigem conversão de tipo | O dashboard usa o CrateDB |
+| Sem `TimeInstant`, o IoT Agent usa a hora de chegada e não atualiza o `dateObserved` | Horários inconsistentes na entidade | O simulador sempre envia `TimeInstant` |
 
 ## Estrutura do repositório
 
@@ -301,33 +179,29 @@ Depois disso, a infraestrutura deste repositório será adaptada para representa
 .
 ├── docker-compose.yml
 ├── README.md
-├── .gitignore
+├── docs/
+│   └── mqtt.md
 ├── grafana/
 │   ├── dashboards/
-│   │   └── fiware-sensor.json
+│   │   └── avenida-principal.json
 │   └── provisioning/
-│       ├── dashboards/
-│       │   └── dashboards.yml
+│       ├── dashboards/dashboards.yml
 │       └── datasources/
+│           ├── cratedb.yml
 │           └── postgres.yml
-└── docs/
-    └── relatorio.md
+├── hoppscotch/
+│   └── mvp-trafego.postman_collection.json
+├── provisionamento/
+│   ├── Dockerfile
+│   └── provisionamento.py
+└── simulador/
+    ├── Dockerfile
+    └── simulador.py
 ```
 
-## Status atual
+## Autores
 
-- MQTT -> IoT Agent: funcionando
-- IoT Agent -> Orion-LD: funcionando
-- Orion-LD -> QuantumLeap -> CrateDB: funcionando
-- Orion-LD -> Draco -> PostgreSQL: funcionando
-- PostgreSQL -> Grafana: funcionando
-- Dashboard de validação: funcionando
-- Ideia central do MVP: pendente de definição
-- Data Model definitivo: pendente de definição
-- Dashboard definitivo: pendente de adaptação
-
-## Autor
-
-André Fernandes Medeiros
+- André Medeiros
+- Ângelo Campelo
 
 Projeto acadêmico desenvolvido no Instituto Metrópole Digital / UFRN.
