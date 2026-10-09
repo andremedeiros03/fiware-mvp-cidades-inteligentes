@@ -1,6 +1,6 @@
 {
-  "uid": "avenida-principal",
-  "title": "Avenida Principal: monitoramento de tráfego",
+  "uid": "salgado-filho",
+  "title": "Av. Senador Salgado Filho: monitoramento de tráfego",
   "description": "Velocidade, fluxo, ocupação e congestionamento dos trechos A e B a partir do histórico do QuantumLeap.",
   "tags": [
     "fiware",

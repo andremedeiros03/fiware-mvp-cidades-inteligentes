@@ -2,9 +2,9 @@
 
 MVP de Cidades Inteligentes que monitora o fluxo de veículos em um corredor viário com Generic Enablers (GEs) FIWARE e NGSI-LD.
 
-Dois sensores de tráfego virtuais, um em cada trecho da **Avenida Principal** (via fictícia), publicam a cada 5 minutos a velocidade média, o número de veículos e a ocupação da faixa. A plataforma mantém o estado atual de cada trecho, marca os períodos de congestionamento, guarda o histórico e mostra os indicadores em um dashboard.
+Dois sensores de tráfego virtuais, um em cada trecho da **Avenida Senador Salgado Filho**, em Natal, nas imediações do cruzamento com a Avenida Nevaldo Rocha, publicam a cada 5 minutos a velocidade média, o número de veículos e a ocupação da faixa. A plataforma mantém o estado atual de cada trecho, marca os períodos de congestionamento, guarda o histórico e mostra os indicadores em um dashboard.
 
-Os dados são **sintéticos**, gerados por um simulador com perfil diário de tráfego e modelo de Greenshields.
+Os dados são **sintéticos**, gerados por um simulador com perfil diário de tráfego e modelo de Greenshields. A geometria dos trechos segue o traçado real da via no OpenStreetMap.
 
 ## Arquitetura
 
@@ -44,7 +44,7 @@ Smart Data Models, domínio de transporte: <https://github.com/smart-data-models
 
 | Entidade | Origem | Identificadores |
 |---|---|---|
-| `RoadSegment` | Provisionamento | `urn:ngsi-ld:RoadSegment:avenida-principal-a`, `...-b` |
+| `RoadSegment` | Provisionamento | `urn:ngsi-ld:RoadSegment:salgado-filho-a`, `...-b` |
 | `TrafficFlowObserved` | Sensores via IoT Agent | `urn:ngsi-ld:TrafficFlowObserved:sensor-trafego-a`, `...-b` |
 
 Todos os dados ficam no tenant `transito`.
@@ -113,7 +113,7 @@ docker exec postgres-db psql -U draco_user -d fiware_data -c 'TRUNCATE transito.
 
 ### 4. Ver o dashboard
 
-Abra <http://localhost:3000> (admin:admin) → **Dashboards → FIWARE → Avenida Principal: monitoramento de tráfego**.
+Abra <http://localhost:3000> (admin:admin) → **Dashboards → FIWARE → Av. Senador Salgado Filho: monitoramento de tráfego**.
 
 O intervalo padrão é o dia 06/10/2026. No modo `--tempo-real`, troque o intervalo para "Last 6 hours".
 
@@ -183,7 +183,7 @@ Depois de um dia simulado, cada sensor tem 288 linhas nos dois bancos.
 │   └── mqtt.md
 ├── grafana/
 │   ├── dashboards/
-│   │   └── avenida-principal.json
+│   │   └── salgado-filho.json
 │   └── provisioning/
 │       ├── dashboards/dashboards.yml
 │       └── datasources/

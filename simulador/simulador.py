@@ -126,7 +126,7 @@ def run_real_time(client: mqtt.Client, zone: timezone, rng: random.Random) -> No
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Simulador de sensores de tráfego da Avenida Principal.")
+    parser = argparse.ArgumentParser(description="Simulador de sensores de tráfego da Avenida Senador Salgado Filho.")
     parser.add_argument("--host", default=os.environ.get("MQTT_HOST", "localhost"), help="host do broker MQTT")
     parser.add_argument("--porta", type=int, default=int(os.environ.get("MQTT_PORT", "1883")), help="porta do broker MQTT")
     parser.add_argument("--fuso", type=int, default=-3, help="fuso horário local em horas (padrão: -3)")

@@ -72,10 +72,10 @@ def crate_sql(statement):
 
 def road_segment(letter, name, lanes, speed, length, start, end):
     return {
-        "id": f"urn:ngsi-ld:RoadSegment:avenida-principal-{letter}",
+        "id": f"urn:ngsi-ld:RoadSegment:salgado-filho-{letter}",
         "type": "RoadSegment",
         "name": {"type": "Property", "value": name},
-        "refRoad": {"type": "Relationship", "object": "urn:ngsi-ld:Road:avenida-principal"},
+        "refRoad": {"type": "Relationship", "object": "urn:ngsi-ld:Road:salgado-filho"},
         "startPoint": {"type": "GeoProperty", "value": {"type": "Point", "coordinates": start}},
         "endPoint": {"type": "GeoProperty", "value": {"type": "Point", "coordinates": end}},
         "location": {"type": "GeoProperty", "value": {"type": "LineString", "coordinates": [start, end]}},
@@ -101,7 +101,7 @@ def device(letter, point):
             {"name": "dateObserved", "type": "DateTime", "expression": "TimeInstant"},
         ],
         "static_attributes": [
-            {"name": "refRoadSegment", "type": "Relationship", "value": f"urn:ngsi-ld:RoadSegment:avenida-principal-{letter}"},
+            {"name": "refRoadSegment", "type": "Relationship", "value": f"urn:ngsi-ld:RoadSegment:salgado-filho-{letter}"},
             {"name": "laneId", "type": "Number", "value": 1},
             {"name": "laneDirection", "type": "Text", "value": "forward"},
             {"name": "location", "type": "geo:json", "value": {"type": "Point", "coordinates": point}},
@@ -123,11 +123,11 @@ def subscription(name, description, uri):
 
 def provision_road_segments():
     segments = [
-        road_segment("a", "Avenida Principal - Trecho A (Norte)", 3, 60, 1.0, [-46.6500, -10.1000], [-46.6500, -10.1090]),
-        road_segment("b", "Avenida Principal - Trecho B (Sul)", 2, 50, 0.9, [-46.6500, -10.1090], [-46.6500, -10.1170]),
+        road_segment("a", "Avenida Senador Salgado Filho - Trecho A (Norte)", 3, 60, 0.63, [-35.205076, -5.812860], [-35.203107, -5.807503]),
+        road_segment("b", "Avenida Senador Salgado Filho - Trecho B (Sul)", 2, 50, 0.9, [-35.207869, -5.820513], [-35.205076, -5.812860]),
     ]
     request("POST", f"{ORION}/ngsi-ld/v1/entityOperations/upsert", segments, ORION_HEADERS)
-    log("ok", "RoadSegment avenida-principal-a e avenida-principal-b")
+    log("ok", "RoadSegment salgado-filho-a e salgado-filho-b")
 
 
 def provision_service_group():
@@ -141,7 +141,7 @@ def provision_service_group():
 
 
 def provision_devices():
-    for letter, point in (("a", [-46.6500, -10.1045]), ("b", [-46.6500, -10.1130])):
+    for letter, point in (("a", [-35.204092, -5.810181]), ("b", [-35.206483, -5.816682])):
         device_id = f"sensor-trafego-{letter}"
         status, _ = request("GET", f"{IOTA}/iot/devices/{device_id}", headers=IOTA_HEADERS, accept=(200, 404))
         if status == 200:
