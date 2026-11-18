@@ -851,6 +851,91 @@
           }
         }
       ]
+    },
+    {
+      "name": "Alertas de congestionamento",
+      "item": [
+        {
+          "name": "Criar alerta manual do trecho B",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:1026/ngsi-ld/v1/entities",
+            "header": [
+              {
+                "key": "NGSILD-Tenant",
+                "value": "transito"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/ld+json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"urn:ngsi-ld:Alert:exemplo-manual-b\",\n  \"type\": \"Alert\",\n  \"category\": {\n    \"type\": \"Property\",\n    \"value\": \"traffic\"\n  },\n  \"subCategory\": {\n    \"type\": \"Property\",\n    \"value\": \"trafficJam\"\n  },\n  \"severity\": {\n    \"type\": \"Property\",\n    \"value\": \"medium\"\n  },\n  \"description\": {\n    \"type\": \"Property\",\n    \"value\": \"Congestionamento detectado por ocupação da via.\"\n  },\n  \"alertSource\": {\n    \"type\": \"Relationship\",\n    \"object\": \"urn:ngsi-ld:RoadSegment:salgado-filho-b\"\n  },\n  \"dateIssued\": {\n    \"type\": \"Property\",\n    \"value\": {\n      \"@type\": \"DateTime\",\n      \"@value\": \"2026-10-06T10:10:00Z\"\n    }\n  },\n  \"@context\": \"https://smart-data-models.github.io/dataModel.Alert/context.jsonld\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Consultar alerta manual",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:1026/ngsi-ld/v1/entities/urn:ngsi-ld:Alert:exemplo-manual-b",
+            "header": [
+              {
+                "key": "NGSILD-Tenant",
+                "value": "transito"
+              },
+              {
+                "key": "Link",
+                "value": "<https://smart-data-models.github.io/dataModel.Alert/context.jsonld>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\""
+              }
+            ]
+          }
+        },
+        {
+          "name": "Encerrar alerta manual",
+          "request": {
+            "method": "PATCH",
+            "url": "http://localhost:1026/ngsi-ld/v1/entities/urn:ngsi-ld:Alert:exemplo-manual-b/attrs",
+            "header": [
+              {
+                "key": "NGSILD-Tenant",
+                "value": "transito"
+              },
+              {
+                "key": "Link",
+                "value": "<https://smart-data-models.github.io/dataModel.Alert/context.jsonld>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\""
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"validTo\": {\n    \"type\": \"Property\",\n    \"value\": {\n      \"@type\": \"DateTime\",\n      \"@value\": \"2026-10-06T10:25:00Z\"\n    }\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Listar episódios automáticos e manuais",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:1026/ngsi-ld/v1/entities?type=Alert&limit=100",
+            "header": [
+              {
+                "key": "NGSILD-Tenant",
+                "value": "transito"
+              },
+              {
+                "key": "Link",
+                "value": "<https://smart-data-models.github.io/dataModel.Alert/context.jsonld>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\""
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

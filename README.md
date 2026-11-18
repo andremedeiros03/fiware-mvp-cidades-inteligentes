@@ -205,3 +205,26 @@ Depois de um dia simulado, cada sensor tem 288 linhas nos dois bancos.
 - Ângelo Campelo
 
 Projeto acadêmico desenvolvido no Instituto Metrópole Digital / UFRN.
+
+### Alertas de congestionamento
+
+O serviço `alertas` recebe notificações de `TrafficFlowObserved` e cria uma entidade
+`Alert` por episódio. Três medições consecutivas acima de 25% de ocupação abrem
+o alerta na terceira leitura. Duas leituras consecutivas de até 25% registram
+o encerramento em `validTo`. A relação `alertSource` identifica o trecho.
+O detector usa `dateObserved` e o intervalo simulado de cinco minutos. Uma lacuna
+reinicia a contagem de leituras consecutivas. O volume `alertas-data` conserva o
+estado por trecho entre reinicializações. Para repetir uma demonstração no mesmo
+ambiente, escolha um período posterior ao já processado.
+
+Após atualizar o projeto, execute na raiz:
+
+```bash
+docker compose up -d --build
+docker compose --profile setup run --rm --build provisionamento
+docker compose --profile simulador run --rm simulador --inicio 2026-11-18T00:00:00
+```
+
+Na coleção Postman, abra **Alertas de congestionamento → Listar episódios automáticos e manuais**.
+As outras três requisições da pasta exercitam o ciclo manual com um ID próprio.
+Para testar a regra localmente: `python -m unittest discover -s alertas`.

@@ -273,6 +273,11 @@ def main():
         "Persistência de TrafficFlowObserved no Draco",
         "http://fiware-draco:5050/v2/notify",
     ))
+    detector = subscription("alertas-trafego", "Detecção de congestionamento por trecho", "http://alertas:8080/notify")
+    detector["watchedAttributes"] = ["occupancy", "dateObserved"]
+    detector["notification"]["format"] = "normalized"
+    detector["notification"]["attributes"] = ["occupancy", "dateObserved", "refRoadSegment"]
+    provision_subscription(detector)
     log("ok", "provisionamento concluído")
 
 

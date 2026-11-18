@@ -165,6 +165,13 @@ services:
     networks:
       - fiware-net
 
+  alertas:
+    build: ./alertas
+    volumes:
+      - alertas-data:/dados
+    networks:
+      - fiware-net
+
   grafana:
     image: grafana/grafana:13.2.2
     container_name: grafana
@@ -199,6 +206,7 @@ volumes:
   cratedata:
   mongo-iota-data:
   grafana-data:
+  alertas-data:
 
 networks:
   fiware-net:
