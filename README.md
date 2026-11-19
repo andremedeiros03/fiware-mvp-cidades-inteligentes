@@ -228,3 +228,18 @@ docker compose --profile simulador run --rm simulador --inicio 2026-11-18T00:00:
 Na coleção Postman, abra **Alertas de congestionamento → Listar episódios automáticos e manuais**.
 As outras três requisições da pasta exercitam o ciclo manual com um ID próprio.
 Para testar a regra localmente: `python -m unittest discover -s alertas`.
+
+### Semáforos inteligentes simulados
+
+O quarto modelo, `Device`, representa os semáforos dos trechos A e B.
+Cada um aponta para seu `RoadSegment` e começa no plano normal, com 30 segundos
+de verde. A assinatura `planos-semaforicos` encaminha eventos de `Alert` ao
+controlador. Um congestionamento ativo no trecho seleciona o plano de pico,
+com 45 segundos de verde para o próximo ciclo. O último alerta encerrado
+devolve o trecho ao plano normal. Os tempos são parâmetros da simulação.
+
+Execute os comandos de atualização e provisionamento da seção anterior.
+Para demonstrar sem o simulador, use o Postman para criar o alerta manual do
+trecho B, consultar ambos os dispositivos em **Semáforos inteligentes** e
+encerrar o alerta. Consulte B novamente. Sem outros episódios ativos,
+`signalPlan` deve voltar a `normal` e `greenDuration` a 30 segundos.

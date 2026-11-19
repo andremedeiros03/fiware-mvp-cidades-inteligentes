@@ -5,6 +5,8 @@ import time
 import urllib.error
 import urllib.request
 
+from semaforos import SEGMENTS, device as signal_device
+
 ORION = os.environ.get("ORION_URL", "http://orion-ld:1026")
 IOTA = os.environ.get("IOTA_URL", "http://iot-agent:4041")
 QUANTUMLEAP = os.environ.get("QUANTUMLEAP_URL", "http://quantumleap:8668")
@@ -151,10 +153,10 @@ def provision_devices():
         log("criado", f"device {device_id}")
 
 
-def provision_subscription(body):
+def provision_subscription(body, headers=ORION_HEADERS):
     url = f"{ORION}/ngsi-ld/v1/subscriptions"
-    request("DELETE", f"{url}/{body['id']}", headers=ORION_HEADERS, accept=(204, 404))
-    request("POST", url, body, ORION_HEADERS)
+    request("DELETE", f"{url}/{body['id']}", headers=headers, accept=(204, 404))
+    request("POST", url, body, headers)
     log("criado", f"subscription {body['id']}")
 
 
@@ -251,6 +253,33 @@ def provision_draco_flow():
     log("criado", "fluxo NiFi ListenHTTP -> NGSIToPostgreSQL -> LogAttribute")
 
 
+def provision_signals():
+    entities = f"{ORION}/ngsi-ld/v1/entities"
+    for segment, signal_id in SEGMENTS.items():
+        status, _ = request("GET", f"{entities}/{signal_id}", headers={"NGSILD-Tenant": TENANT}, accept=(200, 404))
+        if status == 404:
+            request("POST", entities, signal_device(segment),
+                    {"NGSILD-Tenant": TENANT, "Content-Type": "application/ld+json"})
+
+    alert_context = "https://smart-data-models.github.io/dataModel.Alert/context.jsonld"
+    headers = {**ORION_HEADERS, "Link": LINK.replace(CONTEXT, alert_context)}
+    controller = subscription("planos-semaforicos", "Planos por episódio de congestionamento",
+                              "http://alertas:8080/semaforos")
+    controller["entities"] = [{"type": "Alert"}]
+    controller["watchedAttributes"] = ["dateIssued", "validTo", "subCategory", "alertSource"]
+    controller["notification"]["format"] = "normalized"
+    provision_subscription(controller, headers)
+    # Inclui episódios já existentes em instalações da etapa anterior.
+    offset = 0
+    while True:
+        _, events = request("GET", f"{entities}?type=Alert&limit=100&offset={offset}", headers=headers)
+        if events:
+            request("POST", "http://alertas:8080/semaforos", {"data": events})
+        if len(events) < 100:
+            break
+        offset += len(events)
+
+
 def main():
     wait_for("Orion-LD", f"{ORION}/version")
     wait_for("IoT Agent JSON", f"{IOTA}/iot/about")
@@ -259,6 +288,7 @@ def main():
     wait_for("Draco (NiFi)", f"{NIFI}/nifi-api/flow/templates")
 
     provision_road_segments()
+    provision_signals()
     provision_service_group()
     provision_devices()
     provision_subscription(subscription(

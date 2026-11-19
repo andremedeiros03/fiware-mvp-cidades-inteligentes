@@ -144,6 +144,8 @@ services:
 
   provisionamento:
     build: ./provisionamento
+    volumes:
+      - ./alertas/semaforos.py:/app/semaforos.py:ro
     profiles:
       - setup
     environment:

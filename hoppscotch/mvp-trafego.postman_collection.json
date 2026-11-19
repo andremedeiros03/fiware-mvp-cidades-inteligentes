@@ -936,6 +936,37 @@
           }
         }
       ]
+    },
+    {
+      "name": "Semáforos inteligentes",
+      "item": [
+        {
+          "name": "Consultar semáforo do trecho A",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:1026/ngsi-ld/v1/entities/urn:ngsi-ld:Device:semaforo-salgado-filho-a",
+            "header": [
+              {
+                "key": "NGSILD-Tenant",
+                "value": "transito"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Consultar semáforo do trecho B",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:1026/ngsi-ld/v1/entities/urn:ngsi-ld:Device:semaforo-salgado-filho-b",
+            "header": [
+              {
+                "key": "NGSILD-Tenant",
+                "value": "transito"
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

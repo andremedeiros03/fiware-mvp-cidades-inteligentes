@@ -5,6 +5,8 @@ from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.request import Request, urlopen
 
+from semaforos import initialize, on_alert
+
 CONTEXT = "https://smart-data-models.github.io/dataModel.Alert/context.jsonld"
 ORION = os.getenv("ORION_URL", "http://orion-ld:1026")
 DATABASE = os.getenv("ALERTAS_DB", "/dados/estado.sqlite")
@@ -79,16 +81,20 @@ def process(db, entity, send=publish):
 def connect(path):
     db = sqlite3.connect(path)
     db.execute("CREATE TABLE IF NOT EXISTS segment (id TEXT PRIMARY KEY, last TEXT, streak INTEGER, opened TEXT)")
+    initialize(db)
     return db
 
 
 class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
-        if self.path != "/notify":
+        if self.path not in ("/notify", "/semaforos"):
             return self.send_error(404)
         try:
             events = json.loads(self.rfile.read(int(self.headers["Content-Length"])))["data"]
             for entity in events:
+                if self.path == "/semaforos":
+                    on_alert(self.server.db, entity, publish)
+                    continue
                 # O cadastro inicial do dispositivo pode chegar sem medição.
                 if entity.get("occupancy", {}).get("value") is None or not entity.get("dateObserved", {}).get("value"):
                     continue
