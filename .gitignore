@@ -23,3 +23,15 @@ drivers/
 
 # Python
 __pycache__/
+
+# Ambientes virtuais
+.venv/
+.venv-sprint1/
+
+# Cache Python e OSMnx
+.pytest_cache/
+cache/
+__pycache__/
+
+# Arquivos geográficos gerados
+geodata/output/

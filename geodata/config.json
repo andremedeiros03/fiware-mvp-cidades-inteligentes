@@ -1,0 +1,15 @@
+{
+  "bbox_wsen": [-35.228, -5.833, -35.194, -5.794],
+  "corridors": [
+    {"id": "salgado-filho", "aliases": ["senador salgado filho", "salgado filho"]},
+    {"id": "prudente", "aliases": ["prudente de morais", "prudente de moraes"]},
+    {"id": "nevaldo-rocha", "aliases": ["nevaldo rocha", "bernardo vieira"]},
+    {"id": "antonio-basilio", "aliases": ["antonio basilio"]},
+    {"id": "romualdo-galvao", "aliases": ["romualdo galvao"]}
+  ],
+  "segments_per_corridor": 3,
+  "minimum_segment_m": 35,
+  "signals_per_corridor": 2,
+  "fallback_speed_kph": 30,
+  "max_snap_m": 400
+}
